@@ -1,0 +1,12 @@
+---
+- name: Provision and configure servers
+  hosts: webservers
+  become: true
+
+  roles:
+    - common
+    - user
+    - nginx
+    - mysql
+    - php
+    - deploy_app

@@ -1,0 +1,30 @@
+- name: Install Nginx
+  apt:
+    name: nginx
+    state: present
+    update_cache: yes
+
+- name: Running Nginx
+  service:
+    name: nginx
+    state: started
+    enabled: yes
+
+- name: Deploy Nginx configuration
+  template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/sites-available/laravel.conf
+    owner: www-data
+    group: www-data
+    mode: '0644'
+
+- name: Enable Nginx site
+  file:
+    src: /etc/nginx/sites-available/laravel.conf
+    dest: /etc/nginx/sites-enabled/laravel.conf
+    state: link
+
+- name: Restart nginx
+  service:
+    name: nginx
+    state: restarted

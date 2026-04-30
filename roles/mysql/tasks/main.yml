@@ -1,0 +1,29 @@
+- name: Install MySQL 
+  apt:
+    name: mysql-server
+    state: present
+    update_cache: yes
+
+- name: Run MySQL
+  service:
+    name: mysql
+    state: started
+    enabled: yes
+
+- name: Install MySQL Python library
+  apt:
+    name: python3-pymysql
+    state: present
+    update_cache: yes
+
+- name: Create MySQL database
+  mysql_db:
+    name: crud_db
+    state: present
+
+- name: Create MySQL user
+  mysql_user:
+    name: "{{ db_user }}"
+    password: "{{ vault_db_password }}"
+    priv: 'crud_db.*:ALL'
+    state: present

@@ -1,0 +1,19 @@
+- name: User creation
+  user:
+    name: "{{username}}"
+    shell: /bin/bash
+    create_home: yes
+    state: present
+
+- name: Add user to sudo group
+  user:
+    name: "{{username}}"
+    groups: sudo
+    append: yes
+    state: present
+
+- name: Add SSH key for user
+  authorized_key:
+    user: "{{username}}"
+    key: "{{lookup('file', 'files/deploy_key.pub') }}"
+    state: present

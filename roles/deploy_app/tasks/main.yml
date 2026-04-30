@@ -1,0 +1,57 @@
+- name: Install Git
+  apt:
+    name: git
+    state: present
+    update_cache: yes
+
+- name: Clone application repository
+  git:
+    repo: {{ app_repo_url }}
+    dest: /var/www/laravel
+    version: main
+    clone: yes
+
+- name: Install composer
+  apt:
+    name: composer
+    state: present
+    
+- name: Install laravel dependencies
+  composer:
+    command: install
+    working_dir: /var/www/laravel
+    optimize_autoloader: yes
+
+- name: Copy .env file
+  copy:
+    src: .env.example
+    dest: /var/www/laravel/.env
+    remote_src: yes
+    force: no
+
+- name: Check if APP_KEY is set
+  shell: grep "APP_KEY=base64" /var/www/laravel/.env
+  register: app_key_check
+  ignore_errors: yes
+  changed_when: false
+
+- name: Générer clé Laravel
+  command: php artisan key:generate
+  args:
+    chdir: /var/www/laravel
+  when: app_key_check.rc != 0
+
+- name: Run database migrations
+  command: php artisan migrate --force
+  args:
+    chdir: /var/www/laravel
+  register: migrate_output
+  changed_when: "'Nothing to migrate' not in migrate_output.stdout"
+
+- name: Set permissions
+  file:
+    path: /var/www/laravel
+    state: directory
+    recurse: yes
+    owner: www-data
+    group: www-data
