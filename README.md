@@ -1,3 +1,4 @@
+
 # Infrastructure as Code et intégration continue – Déploiement d’une application Laravel
 
 ## Description
@@ -160,13 +161,4 @@ Ce projet m’a permis de développer et consolider des compétences orientées 
 
 Ce projet constitue une base pour une démarche DevOps.
 Il s’inscrit dans une logique d’apprentissage continu et de montée en compétences vers des environnements plus complexes.
-
----
-
-
-
-
-
-
-
 
