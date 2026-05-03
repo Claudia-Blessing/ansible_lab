@@ -1,18 +1,18 @@
 - name: Install PHP and necessary extensions
   apt:
     name: 
-      - php-fpm
-      - php-mysql
-      - php-cli
-      - php-curl
-      - php-xml
-      - php-mbstring
+      - php8.2-fpm
+      - php8.2-mysql
+      - php8.2-cli
+      - php8.2-curl
+      - php8.2-xml
+      - php8.2-mbstring
       - unzip
     state: present
     update_cache: yes
 
 - name: Running PHP-FPM
   service:
-    name: php7.4-fpm
+    name: php8.2-fpm
     state: started
     enabled: yes

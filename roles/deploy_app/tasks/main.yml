@@ -3,31 +3,101 @@
     name: git
     state: present
     update_cache: yes
+    force: yes
+    update: yes
+
+- name: ensure var/www/laravel directory exists
+  file:
+    path: /var/www/laravel
+    state: directory
+    owner: deploy
+    group: deploy
+    mode: '0755'
 
 - name: Clone application repository
   git:
-    repo: {{ app_repo_url }}
+    repo: "{{ app_repo_url }}"
     dest: /var/www/laravel
     version: main
+    force: yes
+    update: yes
     clone: yes
-
+  become:  true
+    
 - name: Install composer
   apt:
     name: composer
     state: present
+    no-dev: yes
     
 - name: Install laravel dependencies
   composer:
     command: install
     working_dir: /var/www/laravel
     optimize_autoloader: yes
+    no_dev: yes
+  become: true
+
+- name: frontend dependencies installation
+  command: npm install
+  args:
+    chdir: /var/www/laravel
+  become: true
+
+
+- name: Front end assets build
+  command: npm run build
+  args:
+    chdir: /var/www/laravel
+  become: true
 
 - name: Copy .env file
-  copy:
-    src: .env.example
-    dest: /var/www/laravel/.env
-    remote_src: yes
-    force: no
+  shell: cp /var/www/laravel/.env.example /var/www/laravel/.env
+  args:
+    creates: /var/www/laravel/.env
+  become: true
+
+- name: Configure database settings in .env
+  lineinfile:
+    path: /var/www/laravel/.env
+    regexp: '^DB_CONNECTION='
+    line: 'DB_CONNECTION=mysql'
+    state: present
+
+- name: Configure database host in .env
+  lineinfile:
+    path: /var/www/laravel/.env
+    regexp: '^DB_HOST='
+    line: 'DB_HOST=127.0.0.1'
+    state: present
+
+- name: Configure database port in .env
+  lineinfile:
+    path: /var/www/laravel/.env
+    regexp: '^DB_PORT='
+    line: 'DB_PORT=3306'
+    state: present
+
+- name: Configure database name in .env
+  lineinfile:
+    path: /var/www/laravel/.env
+    regexp: '^DB_DATABASE='
+    line: 'DB_DATABASE=crud_db'
+    state: present
+
+- name: Configure database username in .env
+  lineinfile:
+    path: /var/www/laravel/.env
+    regexp: '^DB_USERNAME='
+    line: 'DB_USERNAME={{ db_user }}'
+    state: present
+
+- name: Configure database password in .env
+  lineinfile:
+    path: /var/www/laravel/.env
+    regexp: '^DB_PASSWORD='
+    line: 'DB_PASSWORD={{ vault_db_password }}'
+    state: present
 
 - name: Check if APP_KEY is set
   shell: grep "APP_KEY=base64" /var/www/laravel/.env
@@ -35,11 +105,12 @@
   ignore_errors: yes
   changed_when: false
 
-- name: Générer clé Laravel
+- name: Laravel application key generation
   command: php artisan key:generate
   args:
     chdir: /var/www/laravel
   when: app_key_check.rc != 0
+  become: true
 
 - name: Run database migrations
   command: php artisan migrate --force
@@ -48,6 +119,27 @@
   register: migrate_output
   changed_when: "'Nothing to migrate' not in migrate_output.stdout"
 
+- name: Cache configuration
+  command: php artisan config:cache
+  args:
+    chdir: /var/www/laravel   
+  register: config_cache
+  changed_when: "'Configuration cache cleared!' in config_cache.stdout"    
+
+- name: Cache routes
+  command: php artisan route:cache
+  args:
+    chdir: /var/www/laravel
+  register: route_cache
+  changed_when: "'Route cache cleared!' in route_cache.stdout"
+
+- name: Cache views
+  command: php artisan view:cache
+  args:
+    chdir: /var/www/laravel
+  register: view_cache
+  changed_when: "'Compiled views cleared!' in view_cache.stdout"
+
 - name: Set permissions
   file:
     path: /var/www/laravel
@@ -55,3 +147,4 @@
     recurse: yes
     owner: www-data
     group: www-data
+  become: true

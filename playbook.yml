@@ -2,6 +2,8 @@
 - name: Provision and configure servers
   hosts: webservers
   become: true
+  vars_files:
+    - roles/mysql/vars/vault.yml
 
   roles:
     - common
