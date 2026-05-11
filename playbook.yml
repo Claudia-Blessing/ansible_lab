@@ -6,9 +6,11 @@
     - roles/mysql/vars/vault.yml
 
   roles:
-    - common
+    - common 
     - user
     - nginx
     - mysql
     - php
     - deploy_app
+
+#note: The vault.yml file contain the variable 'vault_db_password' 
