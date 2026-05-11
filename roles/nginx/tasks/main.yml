@@ -2,7 +2,7 @@
   apt:
     name: nginx
     state: present
-    update_cache: yes
+#    update_cache: yes
 
 - name: Running Nginx
   service:

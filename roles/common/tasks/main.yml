@@ -1,5 +1,5 @@
-- name: System update and upgrade
-  apt:
-    update_cache: yes
-    upgrade: dist
+#- name: System update and upgrade
+#  apt:
+#    update_cache: yes
+#    upgrade: dist
   
